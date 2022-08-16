@@ -17,9 +17,10 @@ namespace cgn
         void emit(const hir::basic_block &block);
         void emit(const hir::instruction &instruction);
 
-        void emit(const hir::return_instruction &ret);
-
         void emit_mov(x64::reg reg, std::uint32_t immediate);
+        void emit_mov(x64::reg destination, x64::reg source);
+
+        void emit_add(x64::reg reg, std::uint32_t immediate);
 
     private:
         std::vector<std::uint8_t> bytes_;

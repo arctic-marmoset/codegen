@@ -5,21 +5,21 @@
 
 namespace hir
 {
-    class generator : public ast::visitor<generator>
+    class generator final : public ast::visitor
     {
     public:
-        using visitor::visit;
-
-        // NOTE: See ast::tree_printer about the following "hides non-virtual function from base class" warnings.
-
-        void visit(const ast::compound_statement &compound);
-        void visit(const ast::return_statement &ret);
-        void visit(const ast::unsigned_integer_literal &integer);
-
         std::vector<basic_block> &result()
         {
             return blocks_;
         }
+
+        using visitor::visit;
+
+        void visit(const ast::return_statement &ret) override;
+        void visit(const ast::additive_expression &additive) override;
+
+    protected:
+        action before(const ast::unsigned_integer_literal &integer) override;
 
     private:
         [[nodiscard]]
@@ -29,7 +29,7 @@ namespace hir
         }
 
         [[nodiscard]]
-        basic_block make_basic_block()
+        basic_block make_basic_block() const
         {
             return {
                 .id = blocks_.size(),
@@ -37,9 +37,18 @@ namespace hir
             };
         }
 
+        [[nodiscard]]
+        variable make_variable()
+        {
+            return {
+                .id = variable_count_++,
+            };
+        }
+
     private:
-        std::vector<basic_block> blocks_;
-        builtin_type current_value_;
+        std::vector<basic_block> blocks_ = { basic_block { .id = 0 } };
+        expression current_expression_;
+        std::uint32_t variable_count_ = 0;
     };
 
     inline std::vector<hir::basic_block> generate(const ast::root &ast)

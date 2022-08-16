@@ -22,7 +22,7 @@ namespace hir
 template<>
 struct fmt::formatter<hir::builtin_type>
 {
-    constexpr auto parse(format_parse_context& context)
+    constexpr auto parse(format_parse_context &context)
     {
         return context.begin();
     }
@@ -34,11 +34,11 @@ struct fmt::formatter<hir::builtin_type>
             match {
                 [&](hir::unit_type)
                 {
-                    return fmt::format_to(context.out(), "void");
+                    return fmt::format_to(context.out(), "()");
                 },
                 [&](hir::uint32_type uint32)
                 {
-                    return fmt::format_to(context.out(), "uint32 {}U", uint32);
+                    return fmt::format_to(context.out(), "{}U", uint32);
                 },
             },
             value

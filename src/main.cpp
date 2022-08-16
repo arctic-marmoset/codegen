@@ -8,22 +8,27 @@
 
 #include <fmt/core.h>
 
-// clang-format off
-ast::statement tree = ast::compound_statement {
-    {
-        ast::return_statement { ast::unsigned_integer_literal { 0xDEADBEEF } },
-        ast::return_statement { },
-        ast::return_statement { ast::unsigned_integer_literal { 0 } },
-    },
-};
-// clang-format on
-
-// This is just for making sure CRTP is working.
-template<typename T>
-constexpr void do_visit(ast::visitor<T> &visitor, const ast::statement &statement)
+const ast::statement tree = []
 {
-    visitor.visit(statement);
-}
+    std::vector<ast::statement> statements;
+
+    // NOTE: Both push_back and emplace_back have the same effect here, but emplace_back satisfies the
+    //  modernize-use-emplace clang-tidy lint.
+    statements.emplace_back(
+        ast::return_statement {
+            ast::additive_expression {
+                ast::additive_op::add,
+                std::make_unique<ast::expression>(ast::unsigned_integer_literal { 0xDEADBEE5 }),
+                std::make_unique<ast::expression>(ast::unsigned_integer_literal { 0x0000000A }),
+            }
+        }
+    );
+
+    statements.emplace_back(ast::return_statement { });
+    statements.emplace_back(ast::return_statement { ast::unsigned_integer_literal { 0 } });
+
+    return ast::compound_statement { std::move(statements) };
+}();
 
 int main()
 {

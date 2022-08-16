@@ -24,15 +24,15 @@ void hir::printer::print(const instruction &instruction)
 {
     print_indent();
 
-    std::visit(
-        match {
-            [](const return_instruction &ret)
-            {
-                fmt::print("return {}\n", ret.value);
-            },
-        },
-        instruction
-    );
+    switch (instruction.op)
+    {
+    case operation::add:
+        fmt::print("{} = {} {}, {}\n", instruction.destination, instruction.op, instruction.lhs, instruction.rhs);
+        break;
+    case operation::ret:
+        fmt::print("return {}\n", instruction.lhs);
+        break;
+    }
 }
 
 void hir::printer::print_indent()

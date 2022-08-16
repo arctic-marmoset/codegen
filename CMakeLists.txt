@@ -121,6 +121,7 @@ add_executable(codegen
     src/main.cpp
 
     src/ast/tree_printer.cpp
+    src/ast/visitor.cpp
     src/cgn/generator.cpp
     src/hir/generator.cpp
     src/hir/printer.cpp

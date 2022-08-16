@@ -7,7 +7,7 @@
 
 namespace ast
 {
-    class tree_printer : public visitor<tree_printer>
+    class tree_printer final : public visitor
     {
     public:
         constexpr explicit tree_printer(std::uint32_t indent_width = 2)
@@ -16,28 +16,17 @@ namespace ast
         {
         }
 
-        using visitor::visit;
+    protected:
+        action before(const statement &statement) override;
+        action before(const compound_statement &compound) override;
+        void after(const ast::compound_statement &compound) override;
+        action before(const return_statement &ret) override;
+        void after(const ast::return_statement &ret) override;
 
-        // The following public functions cause a "hides non-virtual function from base class" warning. This can be
-        // ignored; CRTP is commonly implemented with the pattern of hiding base class functions. Renaming them would
-        // also work, but would make the interface of "visitor"-type classes nonuniform.
-
-        void visit(const compound_statement &compound);
-        void visit(const return_statement &ret);
-        void visit(const unsigned_integer_literal &integer);
-
-        template<leaf T>
-        void before([[maybe_unused]] const T &node)
-        {
-            print_indent();
-        }
-
-        // This has to be re-declared because `before<T: leaf>()` is overloaded above.
-        template<typename T>
-        constexpr void before([[maybe_unused]] const T &node)
-        {
-            visitor::before(node);
-        }
+        action before(const expression &expression) override;
+        action before(const ast::additive_expression &additive) override;
+        void after(const ast::additive_expression &additive) override;
+        action before(const unsigned_integer_literal &integer) override;
 
     private:
         static constexpr char space_indent = ' ';
@@ -45,13 +34,7 @@ namespace ast
         static constexpr char middle_branch = '|';
         static constexpr char last_branch = '`';
 
-        template<typename... Args>
-        void visit_with_indent(Args &&...args);
-
-        template<typename InputIterator>
-        void visit_with_indent(InputIterator begin, InputIterator end);
-
-        void add_indent(std::size_t count);
+        void add_indent(std::size_t count = 1);
         void remove_indent();
 
         void print_indent();

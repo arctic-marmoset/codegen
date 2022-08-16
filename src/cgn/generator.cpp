@@ -20,36 +20,53 @@ void cgn::generator::emit(const hir::basic_block &block)
 
 void cgn::generator::emit(const hir::instruction &instruction)
 {
-    std::visit(
-        match {
-            [&](const hir::return_instruction &ret)
-            {
-                emit(ret);
-            },
-        },
-        instruction
-    );
-}
+    switch (instruction.op)
+    {
+    case hir::operation::add:
+        {
+            auto lhs = std::get<hir::uint32_type>(std::get<hir::builtin_type>(instruction.lhs));
+            auto rhs = std::get<hir::uint32_type>(std::get<hir::builtin_type>(instruction.rhs));
 
-void cgn::generator::emit(const hir::return_instruction &ret)
-{
-    std::visit(
-        match {
-            [](hir::unit_type) { },
-            [&](hir::uint32_type value)
-            {
-                emit_mov(x64::reg::rax, value);
-            },
-        },
-        ret.value
-    );
+            emit_mov(x64::reg::rax, lhs);
+            emit_add(x64::reg::rax, rhs);
+        }
+        break;
+    case hir::operation::ret:
+        {
+            std::visit(
+                match {
+                    [&](const hir::variable &)
+                    {
+                    },
+                    [&](const hir::builtin_type &value)
+                    {
+                        auto *immediate = std::get_if<hir::uint32_type>(&value);
 
-    bytes_.push_back(x64::ret);
+                        if (immediate)
+                        {
+                            emit_mov(x64::reg::rax, *immediate);
+                        }
+                    },
+                },
+                instruction.lhs
+            );
+
+            bytes_.push_back(x64::ret);
+        }
+        break;
+    }
 }
 
 void cgn::generator::emit_mov(x64::reg reg, std::uint32_t immediate)
 {
-    bytes_.push_back(x64::mov(reg));
-    const std::array immediate_bytes = to_le_bytes(immediate);
+    bytes_.push_back(x64::mov(reg, immediate));
+    const auto immediate_bytes = to_le_bytes(immediate);
+    bytes_.insert(bytes_.end(), immediate_bytes.begin(), immediate_bytes.end());
+}
+
+void cgn::generator::emit_add(x64::reg reg, std::uint32_t immediate)
+{
+    bytes_.push_back(x64::add(reg, immediate));
+    const auto immediate_bytes = to_le_bytes(immediate);
     bytes_.insert(bytes_.end(), immediate_bytes.begin(), immediate_bytes.end());
 }
